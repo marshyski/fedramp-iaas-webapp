@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "environmentName": {
-            "value": "AzureUSGovernment"
+            "value": "AzureCloud"
         },
         "keyVaultName": {
             "value": ""
@@ -26,11 +26,11 @@
         "mgtVMSize": {
             "value": "Standard_D1_v2"
         },
-        "sqlVMSize": {
+        "dbVMSize": {
             "value": "Standard_D2_v2"
         },
-        "sqlServerVersion": {
-            "value": "SQL2017-WS2016"
+        "dbServerVersion": {
+            "value": "DB2017-WS2016"
         },
         "StorageAccountType": {
             "value": "Standard_GRS"

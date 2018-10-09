@@ -1,7 +1,7 @@
 ## This deletes all protected item containers and recovery points for an array of Recovery Services Vaults.
 
 Import-Module AzureRm
-Add-AzureRmAccount -EnvironmentName AzureUSGovernment
+Add-AzureRmAccount -EnvironmentName AzureCloud
 
 ## Enter Azure Subscription ID
 Select-AzureRmSubscription -SubscriptionId "<enter your azure subscription here>"

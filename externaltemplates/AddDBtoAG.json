@@ -14,21 +14,21 @@
         "adminPassword": {
             "type": "securestring"
         },
-        "sqlServerAG": {
+        "dbServerAG": {
             "type": "string"
         },
-        "sqlDatabases": {
+        "dbDatabases": {
             "type": "array"
         },
-        "sqlInstanceName": {
+        "dbInstanceName": {
             "type": "string",
-            "defaultValue": "MSSQLSERVER"
+            "defaultValue": "MSDBSERVER"
         }
     },
     "variables": {
         "baseUri": "[deployment().properties.templateLink.uri]",
         "moduleURL": "[uri(variables('baseUri'), 'DSC/AddDatabaseAG.ps1.zip')]",
-        "DscFunction": "AddDatabaseAG.ps1\\AddDatabaseAGDsc",
+        "DscFunction": "AddDatabaseAG.ps1\\AddDatabaseAGDsc"
     },
     "resources": [
         {
@@ -52,9 +52,9 @@
                             "userName": "[parameters('adminUserName')]",
                             "password": "privateSettingsRef:adminPassword"
                         },
-                        "SQLServerAG": "[parameters('sqlServerAG')]",
-                        "SQLDatabases": "[parameters('sqlDatabases')]",
-                        "SQLInstanceName": "[parameters('sqlInstanceName')]"
+                        "DBServerAG": "[parameters('dbServerAG')]",
+                        "DBDatabases": "[parameters('dbDatabases')]",
+                        "DBInstanceName": "[parameters('dbInstanceName')]"
                     }
                 },
                 "protectedSettings": {

@@ -70,10 +70,10 @@
                 "Name": "AZ-MGT-VM"
             },
             {
-                "Name": "AZ-SQL-VM0"
+                "Name": "AZ-DB-VM0"
             },
             {
-                "Name": "AZ-SQL-VM1"
+                "Name": "AZ-DB-VM1"
             }
         ]
     }

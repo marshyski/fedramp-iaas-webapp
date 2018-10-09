@@ -8,20 +8,20 @@
 		[String]$DomainNetbiosName=(Get-NetBIOSName -DomainName $DomainName),
 
         [Parameter(Mandatory)]
-        [String]$SQLServerAG,
+        [String]$DBServerAG,
 
         [Parameter(Mandatory)]
-        [String[]]$SQLDatabases,
+        [String[]]$DBDatabases,
 
         [Parameter(Mandatory=$false)]
-        [String]$SQLInstanceName = "MSSQLSERVER",
+        [String]$DBInstanceName = "MSDBSERVER",
 
         [Parameter(Mandatory)]
         [System.Management.Automation.PSCredential]$Admincreds
 
     )
 
-    Import-DscResource -ModuleName xComputerManagement, xNetworking, xStorage, SmbShare, xSMBShare, SqlServer, SqlServerDsc, PSDesiredStateConfiguration
+    Import-DscResource -ModuleName xComputerManagement, xNetworking, xStorage, SmbShare, xSMBShare, DBServer, DBServerDsc, PSDesiredStateConfiguration
 
     [System.Management.Automation.PSCredential]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($Admincreds.UserName)", $Admincreds.Password)
 
@@ -43,16 +43,16 @@
             Path = "F:\Backup"
             Ensure = "Present"
             FullAccess = $DomainCreds.UserName
-            Description = "Backup share for SQL Server"
+            Description = "Backup share for DB Server"
             DependsOn = "[File]BackupDirectory"
         }
 
-        SqlAGDatabase AddDatabaseToAG
+        DBAGDatabase AddDatabaseToAG
         {
-            AvailabilityGroupName   = $SQLServerAG
+            AvailabilityGroupName   = $DBServerAG
             BackupPath              = "\\" + $env:COMPUTERNAME + "\DBBackup"
-            DatabaseName            = $SQLDatabases
-            InstanceName            = $SQLInstanceName
+            DatabaseName            = $DBDatabases
+            InstanceName            = $DBInstanceName
             ServerName              = $env:COMPUTERNAME
             Ensure                  = 'Present'
             ProcessOnlyOnActiveNode = $true

@@ -35,9 +35,9 @@ function loginToAzure {
 		[int]$lginCount
 	)
 
-	Write-Host "Please login using Azure Government credentials." -ForegroundColor Yellow
+	Write-Host "Please login using Azure credentials." -ForegroundColor Yellow
 	
-	Login-AzureRmAccount -EnvironmentName "AzureUSGovernment" -ErrorAction SilentlyContinue 	
+	Login-AzureRmAccount -EnvironmentName "AzureCloud" -ErrorAction SilentlyContinue 	
 
 	if($?) {
 		Write-Host "Login Successful!" -ForegroundColor Green
@@ -49,7 +49,7 @@ function loginToAzure {
 			loginToAzure -lginCount $lginCount
 		} 
                 else {
-			Write-Host "Credentials input are incorrect, invalid, or exceed the maximum number of retries. Verify the Azure Government account information used is correct." -ForegroundColor Magenta
+			Write-Host "Credentials input are incorrect, invalid, or exceed the maximum number of retries. Verify the Azure account information used is correct." -ForegroundColor Magenta
 			Write-Host "Press any key to exit..." -ForegroundColor Yellow
 			$x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 			Exit
@@ -68,7 +68,7 @@ try {
     # Resource Group and Key Vault Names
     $KeyVault = Read-Host "The name of the Key Vault used in the deployment"
     $ResourceGroup = Read-Host "Provide the name of the Resource Group deployed"
-    $VMList = @("AZ-PDC-VM", "AZ-BDC-VM", "AZ-WEB-VM0", "AZ-WEB-VM1", "AZ-SQL-VM0", "AZ-SQL-VM1", "AZ-MGT-VM")
+    $VMList = @("AZ-PDC-VM", "AZ-BDC-VM", "AZ-WEB-VM0", "AZ-WEB-VM1", "AZ-DB-VM0", "AZ-DB-VM1", "AZ-MGT-VM")
 
     # Set appropriate Recovery Services Vault context
     Get-AzureRmRecoveryServicesVault -Name "AZ-RCV-01" -ResourceGroupName $ResourceGroup | Set-AzureRmRecoveryServicesVaultContext

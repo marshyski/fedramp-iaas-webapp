@@ -2,13 +2,13 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "sqlsubnetId": {
+    "dbsubnetId": {
       "type": "string"
     },
-    "sqlnodeIpAddresses": {
+    "dbnodeIpAddresses": {
       "type": "array"
     },
-    "sqlclusterIpAddress": {
+    "dbclusterIpAddress": {
       "type": "string"
     },
     "adminUsername": {
@@ -23,7 +23,7 @@
     "StorageAccountType": {
       "type": "string"
     },
-    "sqlVmSize": {
+    "dbVmSize": {
       "type": "string",
       "allowedValues": [
         "Standard_D1_v2",
@@ -48,34 +48,34 @@
         "Standard_DS15_v2"
       ]
     },
-    "sqlVmImagePublisher": {
+    "dbVmImagePublisher": {
       "type": "string",
-      "defaultValue": "MicrosoftSqlServer"
+      "defaultValue": "MicrosoftDBServer"
     },
-    "sqlServerVersion": {
+    "dbServerVersion": {
       "type": "string"
     },
-    "sqlVmImageSku": {
+    "dbVmImageSku": {
       "type": "string",
       "defaultValue": "Enterprise"
     }
   },
   "variables": {
-    "diagStorageAccountName": "[concat(uniquestring(resourceGroup().id), 'sqlvmdiag')]",
-    "cloudWitnessStorageAccountName": "[concat(uniquestring(resourceGroup().id), 'sqlw')]",
-    "HASetName": "SqlHASet",
-    "SqlVmPrefix": "AZ-SQL-VM",
+    "diagStorageAccountName": "[concat(uniquestring(resourceGroup().id), 'dbvmdiag')]",
+    "cloudWitnessStorageAccountName": "[concat(uniquestring(resourceGroup().id), 'dbw')]",
+    "HASetName": "DBHASet",
+    "DBVmPrefix": "AZ-DB-VM",
     "baseUri": "[deployment().properties.templateLink.uri]",
-    "SQLPrepareModuleURL": "[uri(variables('baseUri'), 'DSC/PrepareSQLServer.ps1.zip')]",
-    "SQLPrepareFunction": "PrepareSQLServer.ps1\\SQLServerPrepareDsc",
-    "SQLVmTemplateURL": "[uri(variables('baseUri'),'SQLVM.json')]",
-    "LBName": "SQLLB",
+    "DBPrepareModuleURL": "[uri(variables('baseUri'), 'DSC/PrepareDBServer.ps1.zip')]",
+    "DBPrepareFunction": "PrepareDBServer.ps1\\DBServerPrepareDsc",
+    "DBVmTemplateURL": "[uri(variables('baseUri'),'DBVM.json')]",
+    "LBName": "DBLB",
     "LBBEName": "[concat(variables('LBName'),'BE')]",
     "LBFEName": "[concat(variables('LBName'),'FE')]",
     "LBProbeName": "[concat(variables('LBName'),'Probe')]",
-    "sqlBEAddressPoolID": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('LBName')),'/backendAddressPools/',variables('LBBEName'))]",
-    "sqllbFEConfigID": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('LBName')),'/frontendIPConfigurations/',variables('LBFEName'))]",
-    "sqllbProbeID": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('LBName')),'/probes/',variables('LBProbeName'))]"
+    "dbBEAddressPoolID": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('LBName')),'/backendAddressPools/',variables('LBBEName'))]",
+    "dblbFEConfigID": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('LBName')),'/frontendIPConfigurations/',variables('LBFEName'))]",
+    "dblbProbeID": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('LBName')),'/probes/',variables('LBProbeName'))]"
   },
   "resources": [
     {
@@ -124,10 +124,10 @@
           {
             "name": "[variables('LBFEName')]",
             "properties": {
-              "privateIPAddress": "[parameters('sqlclusterIpAddress')]",
+              "privateIPAddress": "[parameters('dbclusterIpAddress')]",
               "privateIPAllocationMethod": "Static",
               "subnet": {
-                "id": "[parameters('sqlsubnetId')]"
+                "id": "[parameters('dbsubnetId')]"
               }
             }
           }
@@ -139,16 +139,16 @@
         ],
         "loadBalancingRules": [
           {
-            "name": "SQLLBRule",
+            "name": "DBLBRule",
             "properties": {
               "frontendIPConfiguration": {
-                "id": "[variables('sqllbFEConfigID')]"
+                "id": "[variables('dblbFEConfigID')]"
               },
               "backendAddressPool": {
-                "id": "[variables('sqlBEAddressPoolID')]"
+                "id": "[variables('dbBEAddressPoolID')]"
               },
               "probe": {
-                "id": "[variables('sqllbProbeID')]"
+                "id": "[variables('dblbProbeID')]"
               },
               "frontendPort": 1433,
               "backendPort": 1433,
@@ -173,7 +173,7 @@
       }
     },
     {
-      "name": "[concat('SqlVmDeploy', copyindex())]",
+      "name": "[concat('DBVmDeploy', copyindex())]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
       "dependsOn": [
@@ -181,27 +181,27 @@
         "[resourceId('Microsoft.Network/loadBalancers', variables('LBName'))]"
       ],
       "copy": {
-        "name": "sqlvmloop",
+        "name": "dbvmloop",
         "count": 2
       },
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[variables('SQLVMTemplateURL')]",
+          "uri": "[variables('DBVMTemplateURL')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
           "vmName": {
-            "value": "[concat(variables('SqlVmPrefix'), copyindex())]"
+            "value": "[concat(variables('DBVmPrefix'), copyindex())]"
           },
           "vmSize": {
-            "value": "[parameters('sqlVmSize')]"
+            "value": "[parameters('dbVmSize')]"
           },
           "subnetId": {
-            "value": "[parameters('sqlsubnetId')]"
+            "value": "[parameters('dbsubnetId')]"
           },
           "fixedPrivateIp": {
-            "value": "[parameters('sqlnodeIpAddresses')[copyIndex()]]"
+            "value": "[parameters('dbnodeIpAddresses')[copyIndex()]]"
           },
           "adminUsername": {
             "value": "[parameters('adminUsername')]"
@@ -216,16 +216,16 @@
             "value": "[resourceId('Microsoft.Compute/availabilitySets', variables('HASetName'))]"
           },
           "imagePublisher": {
-            "value": "[parameters('sqlVmImagePublisher')]"
+            "value": "[parameters('dbVmImagePublisher')]"
           },
           "imageOffer": {
-            "value": "[parameters('sqlServerVersion')]"
+            "value": "[parameters('dbServerVersion')]"
           },
           "imageSku": {
-            "value": "[parameters('sqlVmImageSku')]"
+            "value": "[parameters('dbVmImageSku')]"
           },
           "LoadBalancerBEId": {
-            "value": "[variables('sqlBEAddressPoolID')]"
+            "value": "[variables('dbBEAddressPoolID')]"
           }
         }
       }
@@ -233,18 +233,18 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('SqlVmPrefix'), copyindex(), '/SqlIaasExtension')]",
+      "name": "[concat(variables('DBVmPrefix'), copyindex(), '/DBIaasExtension')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', concat('SqlVmDeploy', copyindex()))]"
+        "[resourceId('Microsoft.Resources/deployments', concat('DBVmDeploy', copyindex()))]"
       ],
       "copy": {
-        "name": "sqliaasextensionsloop",
+        "name": "dbiaasextensionsloop",
         "count": 2
       },
       "properties": {
-        "type": "SqlIaaSAgent",
-        "publisher": "Microsoft.SqlServer.Management",
+        "type": "DBIaaSAgent",
+        "publisher": "Microsoft.DBServer.Management",
         "typeHandlerVersion": "1.2",
         "autoUpgradeMinorVersion": "true",
         "settings": {
@@ -263,14 +263,14 @@
             "CredentialName": ""
           },
           "ServerConfigurationsManagementSettings": {
-            "SQLConnectivityUpdateSettings": {
+            "DBConnectivityUpdateSettings": {
               "ConnectivityType": "Private",
               "Port": "1433"
             },
-            "SQLWorkloadTypeUpdateSettings": {
-              "SQLWorkloadType": "GENERAL"
+            "DBWorkloadTypeUpdateSettings": {
+              "DBWorkloadType": "GENERAL"
             },
-            "SQLStorageUpdateSettings": {
+            "DBStorageUpdateSettings": {
               "DiskCount": "1",
               "NumberOfColumns": "1",
               "StartingDeviceID": "2",
@@ -287,13 +287,13 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('SqlVmPrefix'), copyindex(), '/joindomain')]",
+      "name": "[concat(variables('DBVmPrefix'), copyindex(), '/joindomain')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat(resourceId('Microsoft.Compute/virtualMachines', concat(variables('SqlVmPrefix'), copyindex())), '/extensions/SqlIaasExtension')]"
+        "[concat(resourceId('Microsoft.Compute/virtualMachines', concat(variables('DBVmPrefix'), copyindex())), '/extensions/DBIaasExtension')]"
       ],
       "copy": {
-        "name": "sqlvmjoinloop",
+        "name": "dbvmjoinloop",
         "count": 2
       },
       "properties": {
@@ -315,14 +315,14 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('SqlVmPrefix'), copyindex(), '/configuresql', copyindex())]",
+      "name": "[concat(variables('DBVmPrefix'), copyindex(), '/configuredb', copyindex())]",
       "dependsOn": [
-        "[concat(resourceId('Microsoft.Compute/virtualMachines', concat(variables('SqlVmPrefix'), copyindex())), '/extensions/joindomain')]",
+        "[concat(resourceId('Microsoft.Compute/virtualMachines', concat(variables('DBVmPrefix'), copyindex())), '/extensions/joindomain')]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('diagStorageAccountName'))]"
       ],
       "apiVersion": "2016-03-30",
       "copy": {
-        "name": "sqlconfigloop",
+        "name": "dbconfigloop",
         "count": 2,
         "mode": "Serial",
         "batchSize": 1
@@ -334,17 +334,17 @@
         "typeHandlerVersion": "2.21",
         "autoUpgradeMinorVersion": true,
         "settings": {
-          "modulesURL": "[variables('SQLPrepareModuleURL')]",
-          "configurationFunction": "[variables('SQLPrepareFunction')]",
+          "modulesURL": "[variables('DBPrepareModuleURL')]",
+          "configurationFunction": "[variables('DBPrepareFunction')]",
           "properties": {
             "domainName": "[parameters('domainName')]",
             "adminCreds": {
               "userName": "[parameters('adminUserName')]",
               "password": "privateSettingsRef:adminPassword"
             },
-            "ClusterName": "SQLClusterAG",
-            "ClusterOwnerNode": "[concat(variables('SqlVmPrefix'), '0')]",
-            "ClusterIP": "[parameters('sqlclusterIpAddress')]",
+            "ClusterName": "DBClusterAG",
+            "ClusterOwnerNode": "[concat(variables('DBVmPrefix'), '0')]",
+            "ClusterIP": "[parameters('dbclusterIpAddress')]",
             "witnessStorageBlobEndpoint": "[reference(variables('cloudWitnessStorageAccountName'), '2016-01-01').primaryEndpoints.blob]",
             "witnessStorageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('cloudWitnessStorageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
           }

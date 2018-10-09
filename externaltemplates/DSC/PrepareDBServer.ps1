@@ -1,4 +1,4 @@
-configuration SQLServerPrepareDsc
+configuration DBServerPrepareDsc
 {
     param
     (
@@ -29,7 +29,7 @@ configuration SQLServerPrepareDsc
         [Int]$RetryIntervalSec=30
     )
 
-    Import-DscResource -ModuleName xComputerManagement, xNetworking, xActiveDirectory, xStorage, xFailoverCluster, SqlServer, SqlServerDsc
+    Import-DscResource -ModuleName xComputerManagement, xNetworking, xActiveDirectory, xStorage, xFailoverCluster, DBServer, DBServerDsc
     [System.Management.Automation.PSCredential]$DomainCreds = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($Admincreds.UserName)", $Admincreds.Password)
 
     $ipcomponents = $ClusterIP.Split('.')
@@ -52,10 +52,10 @@ configuration SQLServerPrepareDsc
 		xFirewall DatabaseEngineFirewallRule
         {
             Direction = "Inbound"
-            Name = "SQL-Server-Database-Engine-TCP-In"
-            DisplayName = "SQL Server Database Engine (TCP-In)"
-            Description = "Inbound rule for SQL Server to allow TCP traffic for the Database Engine."
-            Group = "SQL Server"
+            Name = "DB-Server-Database-Engine-TCP-In"
+            DisplayName = "DB Server Database Engine (TCP-In)"
+            Description = "Inbound rule for DB Server to allow TCP traffic for the Database Engine."
+            Group = "DB Server"
             Enabled = "True"
             Protocol = "TCP"
             LocalPort = "1433"
@@ -65,10 +65,10 @@ configuration SQLServerPrepareDsc
         xFirewall DatabaseMirroringFirewallRule
         {
             Direction = "Inbound"
-            Name = "SQL-Server-Database-Mirroring-TCP-In"
-            DisplayName = "SQL Server Database Mirroring (TCP-In)"
-            Description = "Inbound rule for SQL Server to allow TCP traffic for the Database Mirroring."
-            Group = "SQL Server"
+            Name = "DB-Server-Database-Mirroring-TCP-In"
+            DisplayName = "DB Server Database Mirroring (TCP-In)"
+            Description = "Inbound rule for DB Server to allow TCP traffic for the Database Mirroring."
+            Group = "DB Server"
             Enabled = "True"
             Protocol = "TCP"
             LocalPort = "5022"
@@ -78,10 +78,10 @@ configuration SQLServerPrepareDsc
         xFirewall ListenerFirewallRule
         {
             Direction = "Inbound"
-            Name = "SQL-Server-Availability-Group-Listener-TCP-In"
-            DisplayName = "SQL Server Availability Group Listener (TCP-In)"
-            Description = "Inbound rule for SQL Server to allow TCP traffic for the Availability Group listener."
-            Group = "SQL Server"
+            Name = "DB-Server-Availability-Group-Listener-TCP-In"
+            DisplayName = "DB Server Availability Group Listener (TCP-In)"
+            Description = "Inbound rule for DB Server to allow TCP traffic for the Availability Group listener."
+            Group = "DB Server"
             Enabled = "True"
             Protocol = "TCP"
             LocalPort = "59999"
@@ -121,50 +121,50 @@ configuration SQLServerPrepareDsc
             Ensure = "Present"
         }
 
-        <#TODO: Add user for running SQL server.
+        <#TODO: Add user for running DB server.
         xADUser SvcUser
         {
 
         }
         #>
 
-        SqlServerLogin AddDomainAdminAccountToSqlServer
+        DBServerLogin AddDomainAdminAccountToDBServer
         {
             Name = $DomainCreds.UserName
             LoginType = "WindowsUser"
 			ServerName = "$env:COMPUTERNAME"
-			InstanceName = "MSSQLSERVER"
+			InstanceName = "MSDBSERVER"
         }
 
-        SqlServerLogin AddClusterSvcAccountToSqlServer
+        DBServerLogin AddClusterSvcAccountToDBServer
         {
             Name = "NT SERVICE\ClusSvc"
             LoginType = "WindowsUser"
 			ServerName = "$env:COMPUTERNAME"
-			InstanceName = "MSSQLSERVER"
+			InstanceName = "MSDBSERVER"
         }
 
-        #TODO: Create a special group for "NT SERVICE\clusterSvc" and grant only 'Connect SQL', 
+        #TODO: Create a special group for "NT SERVICE\clusterSvc" and grant only 'Connect DB', 
         #      'Alter Any Availability Group', and 'View Server State' permissions.
-		SqlServerRole AddDomainAdminAccountToSysAdmin
+		DBServerRole AddDomainAdminAccountToSysAdmin
         {
 			Ensure = "Present"
             MembersToInclude = $DomainCreds.UserName,"NT SERVICE\ClusSvc"
             ServerRoleName = "sysadmin"
 			ServerName = "$env:COMPUTERNAME"
-			InstanceName = "MSSQLSERVER"
-			DependsOn = "[SqlServerLogin]AddDomainAdminAccountToSqlServer","[SqlServerLogin]AddClusterSvcAccountToSqlServer"
+			InstanceName = "MSDBSERVER"
+			DependsOn = "[DBServerLogin]AddDomainAdminAccountToDBServer","[DBServerLogin]AddClusterSvcAccountToDBServer"
         }
 
         #TODO: We should create a dedicated user for this.
-        SqlServiceAccount SetServiceAcccount_User
+        DBServiceAccount SetServiceAcccount_User
         {
 			ServerName = "$env:COMPUTERNAME"
-			InstanceName = "MSSQLSERVER"
+			InstanceName = "MSDBSERVER"
             ServiceType    = 'DatabaseEngine'
             ServiceAccount = $DomainCreds
             RestartService = $true
-            DependsOn = "[SqlServerRole]AddDomainAdminAccountToSysAdmin"
+            DependsOn = "[DBServerRole]AddDomainAdminAccountToSysAdmin"
         }
 
 
@@ -177,7 +177,7 @@ configuration SQLServerPrepareDsc
             }
 
             SetScript = {
-                $spn = "MSSQLSvc/" + $using:computerName + "." + $using:DomainName
+                $spn = "MSDBSvc/" + $using:computerName + "." + $using:DomainName
                 
                 $cmd = "setspn -D $spn $using:computerName"
                 Write-Verbose $cmd
@@ -187,7 +187,7 @@ configuration SQLServerPrepareDsc
                 Write-Verbose $cmd
                 Invoke-Expression $cmd
 
-                $spn = "MSSQLSvc/" + $using:computerName + "." + $using:DomainName + ":1433"
+                $spn = "MSDBSvc/" + $using:computerName + "." + $using:DomainName + ":1433"
                 
                 $cmd = "setspn -D $spn $using:computerName"
                 Write-Verbose $cmd
@@ -202,7 +202,7 @@ configuration SQLServerPrepareDsc
                 $false
             }
 
-            DependsOn = "[SqlServiceAccount]SetServiceAcccount_User"
+            DependsOn = "[DBServiceAccount]SetServiceAcccount_User"
             PsDscRunAsCredential = $DomainCreds
         }
 
@@ -231,49 +231,49 @@ configuration SQLServerPrepareDsc
                 PsDscRunAsCredential = $DomainCreds
             }
 
-            SqlAlwaysOnService EnableAlwaysOn
+            DBAlwaysOnService EnableAlwaysOn
             {
                 Ensure               = 'Present'
                 ServerName           = $env:COMPUTERNAME
-                InstanceName         = 'MSSQLSERVER'
+                InstanceName         = 'MSDBSERVER'
                 RestartTimeout       = 120
                 DependsOn = "[xCluster]CreateCluster"
             }
 
             # Create a DatabaseMirroring endpoint
-            SqlServerEndpoint HADREndpoint
+            DBServerEndpoint HADREndpoint
             {
                 EndPointName         = 'HADR'
                 Ensure               = 'Present'
                 Port                 = 5022
                 ServerName           = $env:COMPUTERNAME
-                InstanceName         = 'MSSQLSERVER'
-                DependsOn            = "[SqlAlwaysOnService]EnableAlwaysOn"
+                InstanceName         = 'MSDBSERVER'
+                DependsOn            = "[DBAlwaysOnService]EnableAlwaysOn"
             }
 
             # Create the availability group on the instance tagged as the primary replica
-            SqlAG CreateAG
+            DBAG CreateAG
             {
                 Ensure               = "Present"
                 Name                 = $ClusterName
                 ServerName           = $env:COMPUTERNAME
-                InstanceName         = 'MSSQLSERVER'
-                DependsOn            = "[SqlServerEndpoint]HADREndpoint","[SqlServerRole]AddDomainAdminAccountToSysAdmin"
+                InstanceName         = 'MSDBSERVER'
+                DependsOn            = "[DBServerEndpoint]HADREndpoint","[DBServerRole]AddDomainAdminAccountToSysAdmin"
                 AvailabilityMode     = "SynchronousCommit"
                 FailoverMode         = "Automatic" 
             }
 
-            SqlAGListener AvailabilityGroupListener
+            DBAGListener AvailabilityGroupListener
             {
                 Ensure               = 'Present'
                 ServerName           = $ClusterOwnerNode
-                InstanceName         = 'MSSQLSERVER'
+                InstanceName         = 'MSDBSERVER'
                 AvailabilityGroup    = $ClusterName
                 Name                 = $ClusterName
                 IpAddress            = "$ClusterIP/255.255.255.0"
                 Port                 = 1433
                 PsDscRunAsCredential = $DomainCreds
-                DependsOn            = "[SqlAG]CreateAG"
+                DependsOn            = "[DBAG]CreateAG"
             }
 
             Script SetProbePort
@@ -303,7 +303,7 @@ configuration SQLServerPrepareDsc
                     Write-Verbose "ProbePort = $probePort"
                     ($(Get-ClusterParameter -InputObject $resource -Name ProbePort).Value -eq 59999)
                 }
-                DependsOn = "[SqlAGListener]AvailabilityGroupListener"
+                DependsOn = "[DBAGListener]AvailabilityGroupListener"
                 PsDscRunAsCredential = $DomainCreds
             }
 
@@ -337,50 +337,50 @@ configuration SQLServerPrepareDsc
                 PsDscRunAsCredential = $DomainCreds
             }
 
-            SqlAlwaysOnService EnableAlwaysOn
+            DBAlwaysOnService EnableAlwaysOn
             {
                 Ensure               = 'Present'
                 ServerName           = $env:COMPUTERNAME
-                InstanceName         = 'MSSQLSERVER'
+                InstanceName         = 'MSDBSERVER'
                 RestartTimeout       = 120
                 DependsOn = "[Script]JoinExistingCluster"
             }
 
               # Create a DatabaseMirroring endpoint
-              SqlServerEndpoint HADREndpoint
+              DBServerEndpoint HADREndpoint
               {
                   EndPointName         = 'HADR'
                   Ensure               = 'Present'
                   Port                 = 5022
                   ServerName           = $env:COMPUTERNAME
-                  InstanceName         = 'MSSQLSERVER'
-                  DependsOn            = "[SqlAlwaysOnService]EnableAlwaysOn"
+                  InstanceName         = 'MSDBSERVER'
+                  DependsOn            = "[DBAlwaysOnService]EnableAlwaysOn"
               }
     
 
-              SqlWaitForAG WaitForAG
+              DBWaitForAG WaitForAG
               {
                   Name                 = $ClusterName
                   RetryIntervalSec     = 20
                   RetryCount           = 30
                   PsDscRunAsCredential = $DomainCreds
-                  DependsOn                  = "[SqlServerEndpoint]HADREndpoint","[SqlServerRole]AddDomainAdminAccountToSysAdmin"
+                  DependsOn                  = "[DBServerEndpoint]HADREndpoint","[DBServerRole]AddDomainAdminAccountToSysAdmin"
               }
       
                 # Add the availability group replica to the availability group
-                SqlAGReplica AddReplica
+                DBAGReplica AddReplica
                 {
                     Ensure                     = 'Present'
                     Name                       = $env:COMPUTERNAME
                     AvailabilityGroupName      = $ClusterName
                     ServerName                 = $env:COMPUTERNAME
-                    InstanceName               = 'MSSQLSERVER'
+                    InstanceName               = 'MSDBSERVER'
                     PrimaryReplicaServerName   = $ClusterOwnerNode
-                    PrimaryReplicaInstanceName = 'MSSQLSERVER'
+                    PrimaryReplicaInstanceName = 'MSDBSERVER'
                     PsDscRunAsCredential = $DomainCreds
                     AvailabilityMode     = "SynchronousCommit"
                     FailoverMode         = "Automatic"
-                    DependsOn            = "[SqlWaitForAG]WaitForAG"     
+                    DependsOn            = "[DBWaitForAG]WaitForAG"     
                 }
         }
 

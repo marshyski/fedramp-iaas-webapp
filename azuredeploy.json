@@ -4,9 +4,9 @@
     "parameters": {
         "environmentName": {
             "type": "string",
-            "defaultValue": "AzureUSGovernment",
+            "defaultValue": "AzureCloud",
             "metadata": {
-                "description": "The name of the Azure envrionment for use with the deployment (Azure Commercial or Azure Government)."
+                "description": "The name of the Azure envrionment for use with the deployment Azure Commercial."
             }
         },
         "keyVaultName": {
@@ -111,7 +111,7 @@
             "metadata": {
                 "description": "The size of the VMs created for the Web tier."
             },
-            "defaultValue": "Standard_D2_v2"
+            "defaultValue": "Standard_DS2_v2"
         },
         "mgtVMSize": {
             "type": "string",
@@ -147,7 +147,7 @@
             },
             "defaultValue": "Standard_D1_v2"
         },
-        "sqlVmSize": {
+        "dbVmSize": {
             "type": "string",
             "allowedValues": [
               "Standard_D1_v2",
@@ -171,20 +171,10 @@
               "Standard_DS14_v2",
               "Standard_DS15_v2"
             ],
-            "defaultValue": "Standard_D2_v2",
+            "defaultValue": "Standard_D3_v2",
             "metadata": {
-                "description": "The size of the VMs created for the SQL tier."
+                "description": "The size of the VMs created for the DB tier."
             }
-        },
-        "sqlServerVersion": {
-            "type": "string",
-            "allowedValues": [
-                "SQL2017-WS2016"
-            ],
-            "metadata": {
-                "description": "The image used for the SQL VMs. SQL Server and OS versions are set for SQL Server 2017 on Windows Server 2016 nodes."
-            },
-            "defaultValue": "SQL2017-WS2016"
         },
         "StorageAccountType": {
             "type": "string",
@@ -202,21 +192,21 @@
             "metadata": {
                 "description": "Nested templates base URL."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/fedramp-iaas-webapp/master/nestedtemplates"
+            "defaultValue": "https://raw.githubusercontent.com/marshyski/fedramp-iaas-webapp/master/nestedtemplates"
         },
         "dscBaseUrl": {
             "type": "string",
             "metadata": {
                 "description": "DSC Scripts base URL."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/fedramp-iaas-webapp/master/DSC"
+            "defaultValue": "https://raw.githubusercontent.com/marshyski/fedramp-iaas-webapp/master/DSC"
         },
         "scriptsBaseUrl": {
             "type": "string",
             "metadata": {
                 "description": "Custom Scripts base URL."
             },
-            "defaultValue": "https://raw.githubusercontent.com/Azure/fedramp-iaas-webapp/master/custom-scripts"
+            "defaultValue": "https://raw.githubusercontent.com/marshyski/fedramp-iaas-webapp/master/custom-scripts"
         },
         "gatewaySkuName": {
             "type": "string",
@@ -250,12 +240,12 @@
         "staticIPWEBStart": 5,
         "RDPNAT": "RDP",
         "omsSettings": {
-          "workspaceRegion": "USGov Virginia",
+          "workspaceRegion": "eastus",
           "serviceTier": "PerNode",
           "dataRetention": 365
         },
         "vmSettings": {
-            "location": "USGov Virginia",
+            "location": "eastus",
             "dc": {
                 "imagePublisher": "MicrosoftWindowsServer",
                 "imageOffer": "WindowsServer",
@@ -264,14 +254,11 @@
                 "ipAddressBDC": "10.200.0.6"
             },
             "web": {
-                "imagePublisher": "MicrosoftWindowsServer",
-                "imageOffer": "WindowsServer",
-                "imageSKU": "2016-Datacenter",
+                "imagePublisher": "Canonical",
+                "imageOffer": "UbuntuServer",
+                "imageSKU": "16.04-LTS",
                 "staticIPWEBStart": 5,
-                "ipAddresses": [
-                    { "IpAddress": "10.200.2.5" },
-                    { "IpAddress": "10.200.2.6" }
-                ]
+                "ipAddresses": []
             },
             "mgt": {
                 "imagePublisher": "MicrosoftWindowsServer",
@@ -283,17 +270,17 @@
         },
         "VnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkNameWithSuffix'))]",
         "derivedIds": {
-            "keyVaultUrl": "[concat('https://', parameters('keyVaultName') ,'.vault.usgovcloudapi.net/')]",
+            "keyVaultUrl": "[concat('https://', parameters('keyVaultName') ,'.vault.azure.net/')]",
             "keyVaultId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('keyVaultResourceGroupName'), '/providers/Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]",
             "dcSubnet": "[concat(variables('VnetID'),'/subnets/', variables('subnets').dc.name)]",
-            "sqlSubnet": "[concat(variables('VnetID'),'/subnets/', variables('subnets').sql.name)]",
+            "dbSubnet": "[concat(variables('VnetID'),'/subnets/', variables('subnets').db.name)]",
             "webSubnet": "[concat(variables('VnetID'),'/subnets/', variables('subnets').web.name)]",
             "mgtSubnet": "[concat(variables('VnetID'),'/subnets/', variables('subnets').mgt.name)]",
             "dcNSG": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('resourceNames').nsgs.dc)]",
             "webNSG": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('resourceNames').nsgs.web)]",
             "lbNSG": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('resourceNames').nsgs.lb)]",
             "mgtNSG": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('resourceNames').nsgs.mgt)]",
-            "sqlNSG": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('resourceNames').nsgs.sql)]",
+            "dbNSG": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('resourceNames').nsgs.db)]",
             "adIPConfigID": "[concat(resourceId('Microsoft.Network/networkInterfaces',variables('resourceNames').nics.adpdc),'/ipConfigurations/ipconfig1')]",
             "rdplbFEConfigID": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('lbSettings').rdpLBName),'/frontendIPConfigurations/',variables('lbSettings').rdpLBFEName)]",
             "adRDPNATRuleID": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('lbSettings').rdpLBName),'/inboundNatRules/',variables('RDPNAT'))]",
@@ -306,8 +293,8 @@
                   "addressPrefix": "10.200.0.0/24"
               }
           },
-          "sql": {
-            "name": "sql",
+          "db": {
+            "name": "db",
             "properties": {
                 "addressPrefix": "10.200.1.0/24"
             }
@@ -333,7 +320,7 @@
         },
         "subnetArray": [
             "[variables('subnets').dc]",
-            "[variables('subnets').sql]",
+            "[variables('subnets').db]",
             "[variables('subnets').web]",
             "[variables('subnets').mgt]",
             "[variables('subnets').appGateway]"
@@ -351,7 +338,7 @@
                 "mgt": "MGTNSG",
                 "dc": "DCNSG",
                 "web": "WEBNSG",
-                "sql": "SQLNSG",
+                "db": "DBNSG",
                 "lb": "LBNSG"
             },
             "storageAccounts": {
@@ -364,8 +351,8 @@
                 "adbdc": "AZ-BDC-VM",
                 "web": "AZ-WEB-VM",
                 "mgt": "AZ-MGT-VM",
-                "sql0" : "AZ-SQL-VM0",
-                "sql1" : "AZ-SQL-VM1"
+                "db0" : "AZ-DB-VM0",
+                "db1" : "AZ-DB-VM1"
             },
             "nics": {
                 "adpdc": "adPDC-nic",
@@ -435,7 +422,7 @@
             "diskEncryptionExtensionVersion": "1.1",
             "encryptionOperation": "EnableEncryption",
             "keyEncryptionAlgorithm": "RSA-OAEP",
-            "keyVaultURL": "[concat('https://', parameters('keyVaultName'), '.vault.usgovcloudapi.net/')]",
+            "keyVaultURL": "[concat('https://', parameters('keyVaultName'), '.vault.azure.net/')]",
             "provisioningVMAzureDiskEncryptionUrl": "[concat(parameters('templatesBaseUrl'),'/configuringVMAzureDiskEncryption-kek','.json')]",
             "keyVaultId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('keyVaultResourceGroupName'), '/providers/Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]",
             "keyVaultResourceID": "[concat(subscription().id,'/resourceGroups/',parameters('keyVaultResourceGroupName'),'/providers/Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
@@ -461,16 +448,16 @@
             "scanScheduleDay": "Everyday",
             "disableRealtimeMonitoring": false
         },
-        "vmNamesArraySQLMGT": {
+        "vmNamesArrayDBMGT": {
             "VMs": [
                 {
                     "Name": "[variables('resourceNames').vms.mgt]"
                 },
                 {
-                    "Name": "[variables('resourceNames').vms.sql0]"
+                    "Name": "[variables('resourceNames').vms.db0]"
                 },
                 {
-                    "Name": "[variables('resourceNames').vms.sql1]"
+                    "Name": "[variables('resourceNames').vms.db1]"
                 }
             ]
         },
@@ -502,10 +489,10 @@
                     "Name": "AZ-MGT-VM"
                 },
                 {
-                    "Name": "AZ-SQL-VM0"
+                    "Name": "AZ-DB-VM0"
                 },
                 {
-                    "Name": "AZ-SQL-VM1"
+                    "Name": "AZ-DB-VM1"
                 }
             ]
         }
@@ -631,8 +618,8 @@
                     "dcNSGName": {
                         "value": "[variables('resourceNames').nsgs.dc]"
                     },
-                    "sqlNSGName": {
-                        "value": "[variables('resourceNames').nsgs.sql]"
+                    "dbNSGName": {
+                        "value": "[variables('resourceNames').nsgs.db]"
                     },
                     "webNSGName": {
                         "value": "[variables('resourceNames').nsgs.web]"
@@ -1401,18 +1388,18 @@
             }
         },
         {
-            "name": "[concat('ConfigureOMSMonitoringSQLMGT-', variables('vmNamesArraySQLMGT').VMs[copyIndex()].Name)]",
+            "name": "[concat('ConfigureOMSMonitoringDBMGT-', variables('vmNamesArrayDBMGT').VMs[copyIndex()].Name)]",
             "comments": "Creates OMS Monitoring Extension for the Active Directory and MGT tiers.",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
                 "monitorVMLoopAD",
                 "ConfigureMGT",
-                "ConfigureSQL"
+                "ConfigureDB"
             ],
             "copy": {
-                "name": "monitorVMLoopSQLAD",
-                "count": "[length(variables('vmNamesArraySQLMGT').VMs)]"
+                "name": "monitorVMLoopDBAD",
+                "count": "[length(variables('vmNamesArrayDBMGT').VMs)]"
             },
             "properties": {
                 "mode": "Incremental",
@@ -1422,7 +1409,7 @@
                 },
                 "parameters": {
                     "vmName": {
-                        "value": "[variables('vmNamesArraySQLMGT').VMs[copyIndex()].Name]"
+                        "value": "[variables('vmNamesArrayDBMGT').VMs[copyIndex()].Name]"
                     },
                     "workspaceName": {
                         "value": "[variables('resourceNames').omsWorkspace]"
@@ -1523,9 +1510,9 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                "monitorVMLoopSQLAD",
+                "monitorVMLoopDBAD",
                 "monitorVMLoopWEB",
-                "ConfigureSQL"
+                "ConfigureDB"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -1695,16 +1682,16 @@
             }
         },
         {
-            "name": "[concat('ConfigureVMEncryption-', variables('vmNamesArraySQLMGT').VMs[copyIndex()].Name)]",
+            "name": "[concat('ConfigureVMEncryption-', variables('vmNamesArrayDBMGT').VMs[copyIndex()].Name)]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
                 "ConfigureAutomationSchedules",
-		"ConfigureSQL"
+		"ConfigureDB"
             ],
             "copy": {
-                "name": "encryptionSQLMGTLoop",
-                "count": "[length(variables('vmNamesArraySQLMGT').VMs)]"
+                "name": "encryptionDBMGTLoop",
+                "count": "[length(variables('vmNamesArrayDBMGT').VMs)]"
             },
             "properties": {
                 "mode": "Incremental",
@@ -1714,7 +1701,7 @@
                 },
                 "parameters": {
                     "vmName": {
-                        "value": "[variables('vmNamesArraySQLMGT').VMs[copyIndex()].Name]"
+                        "value": "[variables('vmNamesArrayDBMGT').VMs[copyIndex()].Name]"
                     },
                     "keyVaultName": {
                         "value": "[parameters('keyVaultName')]"
@@ -1766,16 +1753,16 @@
         },
         {
             "apiVersion": "2017-05-10",
-            "name": "ConfigureSQL",
-            "comments": "External template for deploying a SQL 2017 AlwaysOn solution with Azure Cloud Witness for quorum/cluster vote.",
+            "name": "ConfigureDB",
+            "comments": "External template for deploying a DB 2017 AlwaysOn solution with Azure Cloud Witness for quorum/cluster vote.",
             "type": "Microsoft.Resources/deployments",
             "dependsOn": [
-		"ConfigureWEB"    
+		"ConfigureWEB"
             ],
             "properties": {
-              "mode": "incremental",
+              "mode": "Incremental",
               "templateLink": {
-                 "uri":"https://raw.githubusercontent.com/Azure/fedramp-iaas-webapp/master/externaltemplates/ConfigureSQL.json",
+                 "uri":"https://raw.githubusercontent.com/marshyski/fedramp-iaas-webapp/master/externaltemplates/ConfigureDB.json",
                  "contentVersion":"1.0.0.0"
               },
               "parameters": {
@@ -1787,17 +1774,18 @@
                             "secretName": "domain"
                         } 
                     },
-                    "sqlVmSize": {
-                        "value": "[parameters('sqlVmSize')]"
+                    "dbVmSize": {
+                        "value": "[parameters('dbVmSize')]"
                     },
-                    "sqlnodeIpAddresses": {
-                        "Value": [
+                    "dbnodeIpAddresses": {
+                        "value": [
                           "10.200.1.6",
-                          "10.200.1.7"
+                          "10.200.1.7",
+                          "10.200.1.8"
                         ]
                     },
-                    "sqlclusterIpAddress": {
-                        "Value": "10.200.1.8"
+                    "dbclusterIpAddress": {
+                        "value": "10.200.1.8"
                     },
                     "adminUsername": {
                         "reference": {
@@ -1818,17 +1806,17 @@
                     "StorageAccountType": {
                         "value": "[parameters('StorageAccountType')]"
                     },
-                    "sqlVmImagePublisher": {
-                        "Value": "MicrosoftSqlServer"
+                    "dbVmImagePublisher": {
+                        "value": "Canonical"
                     },
-                    "sqlServerVersion": {
-                        "value": "[parameters('sqlServerVersion')]"
+                    "dbServerVersion": {
+                        "value": "UbuntuServer"
                     },
-                    "sqlVmImageSku": {
-                        "Value": "Enterprise"
+                    "dbVmImageSku": {
+                        "value": "16.04-LTS"
                     },
-                    "sqlsubnetId": {
-                        "Value": "[variables('derivedIds').sqlSubnet]"
+                    "dbsubnetId": {
+                        "value": "[variables('derivedIds').dbSubnet]"
                     }
                }
             }

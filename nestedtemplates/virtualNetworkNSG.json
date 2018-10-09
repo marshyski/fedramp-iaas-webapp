@@ -17,7 +17,7 @@
     "dcNSGName": {
       "type": "string"
     },
-    "sqlNSGName": {
+    "dbNSGName": {
       "type": "string"
     },
     "webNSGName": {
@@ -450,9 +450,9 @@
       "dependsOn": []
     },
     {
-      "comments": "SQL NSG",
+      "comments": "DB NSG",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[parameters('sqlNSGName')]",
+      "name": "[parameters('dbNSGName')]",
       "apiVersion": "2016-03-30",
       "tags": {
         "Project": "Blueprint"
@@ -462,7 +462,7 @@
         "securityRules": [
 
           {
-            "name": "SQL",
+            "name": "DB",
             "properties": {
               "protocol": "TCP",
               "sourcePortRange": "*",
@@ -515,7 +515,7 @@
               "priority": 105,
               "direction": "Inbound"
             }
-          },
+          }
         ]
       },
       "resources": [],
