@@ -50,14 +50,15 @@
     },
     "dbVmImagePublisher": {
       "type": "string",
-      "defaultValue": "MicrosoftDBServer"
+      "defaultValue": "Canonical"
     },
     "dbServerVersion": {
-      "type": "string"
+      "type": "string",
+      "defaultValue": "UbuntuServer"
     },
     "dbVmImageSku": {
       "type": "string",
-      "defaultValue": "Enterprise"
+      "defaultValue": "16.04-LTS"
     }
   },
   "variables": {
@@ -68,14 +69,7 @@
     "baseUri": "[deployment().properties.templateLink.uri]",
     "DBPrepareModuleURL": "[uri(variables('baseUri'), 'DSC/PrepareDBServer.ps1.zip')]",
     "DBPrepareFunction": "PrepareDBServer.ps1\\DBServerPrepareDsc",
-    "DBVmTemplateURL": "[uri(variables('baseUri'),'DBVM.json')]",
-    "LBName": "DBLB",
-    "LBBEName": "[concat(variables('LBName'),'BE')]",
-    "LBFEName": "[concat(variables('LBName'),'FE')]",
-    "LBProbeName": "[concat(variables('LBName'),'Probe')]",
-    "dbBEAddressPoolID": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('LBName')),'/backendAddressPools/',variables('LBBEName'))]",
-    "dblbFEConfigID": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('LBName')),'/frontendIPConfigurations/',variables('LBFEName'))]",
-    "dblbProbeID": "[concat(resourceId('Microsoft.Network/loadBalancers',variables('LBName')),'/probes/',variables('LBProbeName'))]"
+    "DBVmTemplateURL": "[uri(variables('baseUri'),'DBVM.json')]"
   },
   "resources": [
     {
@@ -101,84 +95,11 @@
       "properties": {}
     },
     {
-      "name": "[variables('HASetName')]",
-      "type": "Microsoft.Compute/availabilitySets",
-      "location": "[resourceGroup().location]",
-      "apiVersion": "2017-03-30",
-      "dependsOn": [],
-      "properties": {
-        "platformUpdateDomainCount": 2,
-        "platformFaultDomainCount": 2
-      },
-      "sku": {
-        "name": "Aligned"
-      }
-    },
-    {
-      "name": "[variables('LBName')]",
-      "type": "Microsoft.Network/loadBalancers",
-      "apiVersion": "2017-10-01",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "frontendIPConfigurations": [
-          {
-            "name": "[variables('LBFEName')]",
-            "properties": {
-              "privateIPAddress": "[parameters('dbclusterIpAddress')]",
-              "privateIPAllocationMethod": "Static",
-              "subnet": {
-                "id": "[parameters('dbsubnetId')]"
-              }
-            }
-          }
-        ],
-        "backendAddressPools": [
-          {
-            "name": "[variables('LBBEName')]"
-          }
-        ],
-        "loadBalancingRules": [
-          {
-            "name": "DBLBRule",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[variables('dblbFEConfigID')]"
-              },
-              "backendAddressPool": {
-                "id": "[variables('dbBEAddressPoolID')]"
-              },
-              "probe": {
-                "id": "[variables('dblbProbeID')]"
-              },
-              "frontendPort": 1433,
-              "backendPort": 1433,
-              "enableFloatingIP": true,
-              "idleTimeoutInMinutes": 4,
-              "protocol": "Tcp",
-              "loadDistribution": "Default"
-            }
-          }
-        ],
-        "probes": [
-          {
-            "name": "[variables('LBProbeName')]",
-            "properties": {
-              "protocol": "Tcp",
-              "port": 59999,
-              "intervalInSeconds": 5,
-              "numberOfProbes": 2
-            }
-          }
-        ]
-      }
-    },
-    {
       "name": "[concat('DBVmDeploy', copyindex())]",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2017-05-10",
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('diagStorageAccountName'))]",
-        "[resourceId('Microsoft.Network/loadBalancers', variables('LBName'))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('diagStorageAccountName'))]"
       ],
       "copy": {
         "name": "dbvmloop",
@@ -212,9 +133,6 @@
           "diagStorageAccountId": {
             "value": "[resourceId('Microsoft.Storage/storageAccounts', variables('diagStorageAccountName'))]"
           },
-          "availabilitySetId": {
-            "value": "[resourceId('Microsoft.Compute/availabilitySets', variables('HASetName'))]"
-          },
           "imagePublisher": {
             "value": "[parameters('dbVmImagePublisher')]"
           },
@@ -223,135 +141,6 @@
           },
           "imageSku": {
             "value": "[parameters('dbVmImageSku')]"
-          },
-          "LoadBalancerBEId": {
-            "value": "[variables('dbBEAddressPoolID')]"
-          }
-        }
-      }
-    },
-    {
-      "apiVersion": "2015-06-15",
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('DBVmPrefix'), copyindex(), '/DBIaasExtension')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', concat('DBVmDeploy', copyindex()))]"
-      ],
-      "copy": {
-        "name": "dbiaasextensionsloop",
-        "count": 2
-      },
-      "properties": {
-        "type": "DBIaaSAgent",
-        "publisher": "Microsoft.DBServer.Management",
-        "typeHandlerVersion": "1.2",
-        "autoUpgradeMinorVersion": "true",
-        "settings": {
-          "AutoTelemetrySettings": {
-            "Region": "[resourceGroup().location]"
-          },
-          "AutoPatchingSettings": {
-            "PatchCategory": "WindowsMandatoryUpdates",
-            "Enable": true,
-            "DayOfWeek": "Sunday",
-            "MaintenanceWindowStartingHour": "2",
-            "MaintenanceWindowDuration": "60"
-          },
-          "KeyVaultCredentialSettings": {
-            "Enable": false,
-            "CredentialName": ""
-          },
-          "ServerConfigurationsManagementSettings": {
-            "DBConnectivityUpdateSettings": {
-              "ConnectivityType": "Private",
-              "Port": "1433"
-            },
-            "DBWorkloadTypeUpdateSettings": {
-              "DBWorkloadType": "GENERAL"
-            },
-            "DBStorageUpdateSettings": {
-              "DiskCount": "1",
-              "NumberOfColumns": "1",
-              "StartingDeviceID": "2",
-              "DiskConfigurationType": "NEW"
-            },
-            "AdditionalFeaturesServerConfigurations": {
-              "IsRServicesEnabled": "false"
-            }
-          }
-        },
-        "protectedSettings": {}
-      }
-    },
-    {
-      "apiVersion": "2015-06-15",
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('DBVmPrefix'), copyindex(), '/joindomain')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat(resourceId('Microsoft.Compute/virtualMachines', concat(variables('DBVmPrefix'), copyindex())), '/extensions/DBIaasExtension')]"
-      ],
-      "copy": {
-        "name": "dbvmjoinloop",
-        "count": 2
-      },
-      "properties": {
-        "publisher": "Microsoft.Compute",
-        "type": "JsonADDomainExtension",
-        "typeHandlerVersion": "1.3",
-        "autoUpgradeMinorVersion": true,
-        "settings": {
-          "Name": "[parameters('domainName')]",
-          "OUPath": "",
-          "User": "[concat(parameters('domainName'), '\\', parameters('adminUserName'))]",
-          "Restart": "true",
-          "Options": "3"
-        },
-        "protectedSettings": {
-          "Password": "[parameters('adminPassword')]"
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(variables('DBVmPrefix'), copyindex(), '/configuredb', copyindex())]",
-      "dependsOn": [
-        "[concat(resourceId('Microsoft.Compute/virtualMachines', concat(variables('DBVmPrefix'), copyindex())), '/extensions/joindomain')]",
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('diagStorageAccountName'))]"
-      ],
-      "apiVersion": "2016-03-30",
-      "copy": {
-        "name": "dbconfigloop",
-        "count": 2,
-        "mode": "Serial",
-        "batchSize": 1
-      },
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publisher": "Microsoft.Powershell",
-        "type": "DSC",
-        "typeHandlerVersion": "2.21",
-        "autoUpgradeMinorVersion": true,
-        "settings": {
-          "modulesURL": "[variables('DBPrepareModuleURL')]",
-          "configurationFunction": "[variables('DBPrepareFunction')]",
-          "properties": {
-            "domainName": "[parameters('domainName')]",
-            "adminCreds": {
-              "userName": "[parameters('adminUserName')]",
-              "password": "privateSettingsRef:adminPassword"
-            },
-            "ClusterName": "DBClusterAG",
-            "ClusterOwnerNode": "[concat(variables('DBVmPrefix'), '0')]",
-            "ClusterIP": "[parameters('dbclusterIpAddress')]",
-            "witnessStorageBlobEndpoint": "[reference(variables('cloudWitnessStorageAccountName'), '2016-01-01').primaryEndpoints.blob]",
-            "witnessStorageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('cloudWitnessStorageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]"
-          }
-        },
-        "protectedSettings": {
-          "items": {
-            "adminPassword": "[parameters('adminPassword')]"
           }
         }
       }

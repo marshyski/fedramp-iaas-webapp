@@ -1331,7 +1331,6 @@
             "apiVersion": "2015-01-01",
             "dependsOn": [
                 "monitorVMLoopDBAD",
-                "monitorVMLoopWEB",
                 "ConfigureDB"
             ],
             "properties": {

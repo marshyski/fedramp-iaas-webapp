@@ -29,8 +29,7 @@
         "name": "RS0",
         "tier": "[parameters('skuTier')]"
       },
-      "properties": {},
-      "tags": {}
+      "properties": {}
     }
   ]
 }
