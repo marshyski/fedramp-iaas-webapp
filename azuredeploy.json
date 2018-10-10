@@ -240,12 +240,12 @@
         "staticIPWEBStart": 5,
         "RDPNAT": "RDP",
         "omsSettings": {
-          "workspaceRegion": "eastus",
+          "workspaceRegion": "East US",
           "serviceTier": "PerNode",
           "dataRetention": 365
         },
         "vmSettings": {
-            "location": "eastus",
+            "location": "eastus2",
             "dc": {
                 "imagePublisher": "MicrosoftWindowsServer",
                 "imageOffer": "WindowsServer",
@@ -258,7 +258,10 @@
                 "imageOffer": "UbuntuServer",
                 "imageSKU": "16.04-LTS",
                 "staticIPWEBStart": 5,
-                "ipAddresses": []
+                "ipAddresses": [
+                    { "IpAddress": "10.200.2.5" },
+                    { "IpAddress": "10.200.2.6" }
+                ]            
             },
             "mgt": {
                 "imagePublisher": "MicrosoftWindowsServer",
@@ -387,7 +390,6 @@
             "virtualNetworkNSGURL": "[concat(parameters('templatesBaseUrl'),'/virtualNetworkNSG.json')]",
             "provisionAndConfigureADUrl": "[concat(parameters('templatesBaseUrl'),'/provisionAndConfigureAD.json')]",
             "configureMGTUrl": "[concat(parameters('templatesBaseUrl'),'/configureMGT.json')]",
-            "configureWEBUrl": "[concat(parameters('templatesBaseUrl'),'/configureWEB.json')]",
             "provisioningRCV": "[concat(parameters('templatesBaseUrl'),'/recoveryServicesVault.json')]",
             "backupPolicy": "[concat(parameters('templatesBaseUrl'),'/recoveryServicesBackupPolicy.json')]",
             "configuringBackupADVMURL": "[concat(parameters('templatesBaseUrl'),'/configuringBackupADVM.json')]",
@@ -1264,130 +1266,6 @@
             }
         },
         {
-            "name": "ConfigureWEB",
-            "comments": "Configures WEB VMs with custom settings.",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2015-01-01",
-            "dependsOn": [
-                "Microsoft.Resources/deployments/ProvisionVirtualMachines",
-                "monitorVMLoopAD"
-            ],
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('artifacts').configureWEBUrl]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "numberOfWebInstances": {
-                        "value": "[variables('numberOfWebInstances')]"
-                    },
-                    "WebVMName": {
-                        "value": "[variables('resourceNames').vms.web]"
-                    },
-                    "WebAvailabilitySetName": {
-                        "value": "[variables('resourceNames').availabilitySets.web]"
-                    },
-                    "WebStorageAccountName": {
-                        "value": "[variables('resourceNames').storageAccounts.web]"
-                    },
-                    "StorageAccountType": {
-                        "value": "[parameters('StorageAccountType')]"
-                    },
-                    "location": {
-                        "value": "[variables('vmSettings').location]"
-                    },
-                    "WebVMSize": {
-                        "value": "[parameters('webVMSize')]"
-                    },
-                    "adminUsername": {
-                      "reference": {
-                        "keyVault": {
-                          "id": "[variables('derivedIds').keyVaultId]"
-                        },
-                        "secretName": "adminUsername"
-                      }
-                    },
-                    "adminPassword": {
-                        "reference": {
-                            "keyVault": {
-                                "id": "[variables('derivedIds').keyVaultId]"
-                            },
-                            "secretName": "adminPassword"
-                        }
-                    },
-                    "appImagePublisher": {
-                        "value": "[variables('vmSettings').web.imagePublisher]"
-                    },
-                    "appImageOffer": {
-                        "value": "[variables('vmSettings').web.imageOffer]"
-                    },
-                    "appImageSKU": {
-                        "value": "[variables('vmSettings').web.imageSKU]"
-                    },
-                    "vmContainerName": {
-                        "value": "[variables('vmSettings').vmContainerName]"
-                    },
-                    "WEBNICName": {
-                        "value": "[variables('resourceNames').nics.web]"
-                    },
-                    "subnetRef": {
-                        "value": "[variables('derivedIds').webSubnet]"
-                    },
-                    "webNSGid": {
-                        "value": "[variables('derivedIds').webNSG]"
-                    },
-                    "domainName": {
-                      "reference": {
-                        "keyVault": {
-                          "id": "[variables('derivedIds').keyVaultId]"
-                        },
-                        "secretName": "domain"
-                      }
-                    },
-                    "webModulesURL": {
-                        "value": "[variables('artifacts').webModulesURL]"
-                    },
-                    "webConfigurationFunction": {
-                        "value": "[variables('artifacts').webConfigurationFunction]"
-                    },
-                    "staticIPWEBStart": {
-                        "value": "[variables('staticIPWEBStart')]"
-                    },
-                    "webSubnetAddressRange": {
-                        "value": "[variables('subnets').web.properties.addressPrefix]"
-                    },
-                    "keyVaultName": {
-                        "value": "[parameters('keyVaultName')]"
-                    },
-                    "vmEncryptionSettings": {
-                        "value": "[variables('vmEncryptionSettings')]"
-                    },
-                    "antimalwareInfo": {
-                        "value": "[variables('antimalwareInfo')]"
-                    },
-                    "workspaceName": {
-                        "value": "[variables('resourceNames').omsWorkspace]"
-                    },
-                    "AutomationAccountName": {
-                        "value": "[variables('resourceNames').automationAccount]"
-                    },
-                    "EnvironmentName": {
-                        "value": "[parameters('EnvironmentName')]"
-                    },
-                    "SubscriptionId": {
-                        "value": "[subscription().subscriptionId]"
-                    },
-                    "ResourceGroupName": {
-                        "value": "[resourceGroup().name]"
-                    },
-                    "omsWorkspaceName": {
-                        "value": "[variables('resourceNames').omsWorkspace]"
-                    }
-                }
-            }
-        },
-        {
             "name": "[concat('ConfigureOMSMonitoringDBMGT-', variables('vmNamesArrayDBMGT').VMs[copyIndex()].Name)]",
             "comments": "Creates OMS Monitoring Extension for the Active Directory and MGT tiers.",
             "type": "Microsoft.Resources/deployments",
@@ -1452,8 +1330,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                "monitorVMLoopAD",
-                "ConfigureWEB"
+                "monitorVMLoopAD"            
             ],
             "copy": {
                 "name": "monitorVMLoopWEB",
@@ -1546,8 +1423,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                  "ConfigureAutomationSchedules",
-		  "ConfigureWEB"
+                  "ConfigureAutomationSchedules"
             ],
             "copy": {
                 "name": "encryptionWEBLoop",
@@ -1756,9 +1632,6 @@
             "name": "ConfigureDB",
             "comments": "External template for deploying a DB 2017 AlwaysOn solution with Azure Cloud Witness for quorum/cluster vote.",
             "type": "Microsoft.Resources/deployments",
-            "dependsOn": [
-		"ConfigureWEB"
-            ],
             "properties": {
               "mode": "Incremental",
               "templateLink": {

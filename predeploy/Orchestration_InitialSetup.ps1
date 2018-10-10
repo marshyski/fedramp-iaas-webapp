@@ -265,7 +265,7 @@ Write-Host "`n LOGIN TO AZURE `n" -foregroundcolor green
 function orchestration {
 	Param(
 		[string]$environmentName = "AzureCloud",
-		[string]$location = "eastus",
+		[string]$location = "eastus2",
 		[Parameter(Mandatory=$true)]
 		[string]$subscriptionId,
 		[Parameter(Mandatory=$true)]
