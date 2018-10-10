@@ -1,0 +1,175 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "numberOfWebInstances": {
+            "type": "int",
+            "defaultValue": 2,
+            "minValue": 2,
+            "maxValue": 5
+        },
+        "WebVMName": {
+            "type": "string"
+        },
+        "WebAvailabilitySetName": {
+            "type": "string"
+        },
+        "WebStorageAccountName": {
+            "type": "string"
+        },
+        "StorageAccountType": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+        "WebVMSize": {
+            "type": "string"
+        },
+        "WEBNICName": {
+            "type": "string"
+        },
+        "adminUsername": {
+            "type": "securestring"
+        },
+        "adminPassword": {
+            "type": "securestring"
+        },
+        "appImagePublisher": {
+            "type": "string"
+        },
+        "appImageOffer": {
+            "type": "string"
+        },
+        "appImageSKU": {
+            "type": "string"
+        },
+        "vmContainerName": {
+            "type": "string"
+        },
+        "domainName": {
+            "type": "string"
+        },
+        "webModulesURL": {
+            "type": "string"
+        },
+        "webConfigurationFunction": {
+            "type": "string"
+        },
+        "subnetRef": {
+            "type": "string"
+        },
+        "webSubnetAddressRange": {
+            "type": "string"
+        },
+        "staticIPWEBStart": {
+            "type": "int"
+        },
+        "webNSGid": {
+            "type": "string"
+        },
+        "keyVaultName": {
+            "type": "string"
+        },
+        "vmEncryptionSettings": {
+            "type": "object"
+        },
+        "antimalwareInfo": {
+            "type": "object"
+        },
+        "workspaceName": {
+            "type": "string"
+        },
+        "AutomationAccountName": {
+            "type": "string"
+        },
+        "EnvironmentName": {
+            "type": "string"
+        },
+        "ResourceGroupName": {
+            "type": "string"
+        },
+        "SubscriptionId": {
+            "type": "string"
+        },
+        "omsWorkspaceName": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "domainJoinOptions": 3,
+        "domainJoinUserName": "[concat(parameters('domainName'), '\\', parameters('adminUsername'))]"
+    },
+    "resources": [
+          {
+              "comments": "Join domain - JsonADDomainExtension",
+              "apiVersion": "2015-06-15",
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "name": "[concat(parameters('WebVMName'), copyindex(), '/joindomain')]",
+              "tags": {
+                  "Project": "Blueprint"
+              },
+              "copy": {
+                  "name": "vmLoopJoin",
+                  "count": "[parameters('numberOfWebInstances')]"
+              },
+              "dependsOn": [
+              ],
+              "location": "[parameters('location')]",
+              "properties": {
+                  "publisher": "Microsoft.Compute",
+                  "type": "JsonADDomainExtension",
+                  "typeHandlerVersion": "1.3",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                      "Name": "[parameters('domainName')]",
+                      "User": "[variables('domainJoinUserName')]",
+                      "Restart": "true",
+                      "Options": "[variables('domainJoinOptions')]",
+                      "OUPath": ""
+                  },
+                  "protectedSettings": {
+                      "Password": "[parameters('adminPassword')]"
+                  }
+              }
+          },
+          {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('WebVMName'), copyindex(), '/WebBaselineDSC')]",
+            "apiVersion": "2015-05-01-preview",
+            "tags": {
+                "Project": "Blueprint"
+            },
+            "copy": {
+                "name": "vmLoopBaseline",
+                "count": "[parameters('numberOfWebInstances')]"
+            },
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines/extensions', concat(parameters('WebVMName'),copyIndex()), 'joindomain')]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.20",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "ModulesUrl": "[parameters('webModulesURL')]",
+                    "ConfigurationFunction": "[parameters('webConfigurationFunction')]",
+                    "Properties": {
+                        "MachineName": "[concat(parameters('WebVMName'), copyindex())]",
+                        "ExclusionPath": "[parameters('antimalwareInfo').exclusionPath.web]",
+                        "ExclusionExtension": "[parameters('antimalwareInfo').exclusionExtension.web]",
+                        "ExclusionProcess": "[parameters('antimalwareInfo').exclusionProcess.web]",
+                        "RealTimeScanDirection": "[parameters('antimalwareInfo').realTimeScanDirection]",
+                        "RemediationScheduleDay": "[parameters('antimalwareInfo').remediationScheduleDay]",
+                        "ScanScheduleDay": "[parameters('antimalwareInfo').scanScheduleDay]",
+                        "DisableRealtimeMonitoring": "[parameters('antimalwareInfo').disableRealtimeMonitoring]"
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+    }
+}

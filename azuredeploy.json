@@ -1325,63 +1325,6 @@
             }
         },
         {
-            "name": "[concat('ConfigureOMSMonitoringWEB-', variables('resourceNames').vms.web, copyindex())]",
-            "comments": "Creates the OMS Monitoring Extension for the WEB tier.",
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2015-01-01",
-            "dependsOn": [
-                "monitorVMLoopAD"            
-            ],
-            "copy": {
-                "name": "monitorVMLoopWEB",
-                "count": "[variables('numberOfWebInstances')]"
-            },
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "[variables('artifacts').provisioningOMSMonitoringUrl]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "vmName": {
-                        "value": "[concat(variables('resourceNames').vms.web, copyindex())]"
-                    },
-                    "workspaceName": {
-                        "value": "[variables('resourceNames').omsWorkspace]"
-                    },
-                    "AutomationAccountName": {
-                        "value": "[variables('resourceNames').automationAccount]"
-                    },
-                    "EnvironmentName": {
-                        "value": "[parameters('EnvironmentName')]"
-                    },
-                    "SubscriptionId": {
-                        "value": "[subscription().subscriptionId]"
-                    },
-                    "ResourceGroupName": {
-                        "value": "[resourceGroup().name]"
-                    },
-                    "accountManagementPrincipalsUrl": {
-                        "value": "[variables('artifacts').accountManagementPrincipalsUrl]"
-                    },
-                    "MachinesToSetPasswordPolicy": {
-                        "value": ""
-                    },
-                    "location": {
-                        "value": "[variables('vmSettings').location]"
-                    },
-                    "DomainName": {
-                      "reference": {
-                        "keyVault": {
-                          "id": "[variables('derivedIds').keyVaultId]"
-                        },
-                        "secretName": "domain"
-                      }
-                    }
-                }
-            }
-        },
-        {
             "name": "ConfigureAutomationSchedules",
             "comments": "Configures patching automation schedules.",
             "type": "Microsoft.Resources/deployments",
