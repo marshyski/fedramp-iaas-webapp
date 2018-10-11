@@ -6,9 +6,9 @@ Add-AzureRmAccount -EnvironmentName AzureCloud
 ## Enter Azure Subscription ID
 Select-AzureRmSubscription -SubscriptionId "<enter your azure subscription here>"
 
-## AZ-RCV-01 is the default name of the Recovery Services Vault deployed. 
+## AZ-RCV-02 is the default name of the Recovery Services Vault deployed. 
 ## To remove protected items from a different Recovery Services Vault or additional vaults, edit/add Recovery Service Vault names in the $rcvNames variable below.
-$rcvNames = @("AZ-RCV-01")
+$rcvNames = @("AZ-RCV-02")
 
 for($i=0;$i -lt $rcvNames.Length;$i++){
     $vaults = Get-AzureRmRecoveryServicesVault | ?{$_.Name -eq $rcvNames[$i]}

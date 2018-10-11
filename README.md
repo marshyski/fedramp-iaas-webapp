@@ -138,7 +138,7 @@ Additional documentation regarding template deployment is available at the follo
 
 #### How to delete deployed resources
 
-To help with deleting protected resources, use the **custom-scripts/deleteProtectedItems.ps1** script if the **postdeploy/PostDeployment.ps1** script has been executed for creating the initial recovery point. This PowerShell script will remove any deletion locks on the resources inside the deployed Recovery Services Vault. Note that the script needs to be edited to include the selected subscription ID. The default Recovery Service Vault name of 'AZ-RCV-01' is already set in the script. 
+To help with deleting protected resources, use the **custom-scripts/deleteProtectedItems.ps1** script if the **postdeploy/PostDeployment.ps1** script has been executed for creating the initial recovery point. This PowerShell script will remove any deletion locks on the resources inside the deployed Recovery Services Vault. Note that the script needs to be edited to include the selected subscription ID. The default Recovery Service Vault name of 'AZ-RCV-02' is already set in the script. 
 
 If only the deployment has been run, with no backup operations executed through the post-deployment script, only the resource group deployed needs to be deleted for removing deployed resources.  
 

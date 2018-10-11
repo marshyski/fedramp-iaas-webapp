@@ -71,7 +71,7 @@ try {
     $VMList = @("AZ-PDC-VM", "AZ-BDC-VM", "AZ-WEB-VM0", "AZ-WEB-VM1", "AZ-DB-VM0", "AZ-DB-VM1", "AZ-MGT-VM")
 
     # Set appropriate Recovery Services Vault context
-    Get-AzureRmRecoveryServicesVault -Name "AZ-RCV-01" -ResourceGroupName $ResourceGroup | Set-AzureRmRecoveryServicesVaultContext
+    Get-AzureRmRecoveryServicesVault -Name "AZ-RCV-02" -ResourceGroupName $ResourceGroup | Set-AzureRmRecoveryServicesVaultContext
 
     # Initialize Recovery Services Vault for new AzureRM registration - Check for and remove old backup containers
     Get-AzureRmRecoveryServicesVault -ResourceGroupName $ResourceGroup | Set-AzureRmRecoveryServicesVaultContext
