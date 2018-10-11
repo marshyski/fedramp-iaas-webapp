@@ -1272,8 +1272,7 @@
             "apiVersion": "2015-01-01",
             "dependsOn": [
                 "monitorVMLoopAD",
-                "ConfigureMGT",
-                "ConfigureDB"
+                "ConfigureMGT"
             ],
             "copy": {
                 "name": "monitorVMLoopDBAD",
@@ -1330,8 +1329,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                "monitorVMLoopDBAD",
-                "ConfigureDB"
+                "monitorVMLoopDBAD"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -1504,8 +1502,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                "ConfigureAutomationSchedules",
-		"ConfigureDB"
+                "ConfigureAutomationSchedules"
             ],
             "copy": {
                 "name": "encryptionDBMGTLoop",
@@ -1567,73 +1564,6 @@
                         "value": "[subscription().subscriptionId]"
                     }
                 }
-            }
-        },
-        {
-            "apiVersion": "2017-05-10",
-            "name": "ConfigureDB",
-            "comments": "External template for deploying a DB 2017 AlwaysOn solution with Azure Cloud Witness for quorum/cluster vote.",
-            "type": "Microsoft.Resources/deployments",
-            "properties": {
-              "mode": "Incremental",
-              "templateLink": {
-                 "uri":"https://raw.githubusercontent.com/marshyski/fedramp-iaas-webapp/master/externaltemplates/ConfigureDB.json",
-                 "contentVersion":"1.0.0.0"
-              },
-              "parameters": {
-                    "domainName": {
-                        "reference": {
-                            "keyVault": {
-                                "id": "[variables('derivedIds').keyVaultId]"
-                            },
-                            "secretName": "domain"
-                        } 
-                    },
-                    "dbVmSize": {
-                        "value": "[parameters('dbVmSize')]"
-                    },
-                    "dbnodeIpAddresses": {
-                        "value": [
-                          "10.200.1.6",
-                          "10.200.1.7",
-                          "10.200.1.8"
-                        ]
-                    },
-                    "dbclusterIpAddress": {
-                        "value": "10.200.1.8"
-                    },
-                    "adminUsername": {
-                        "reference": {
-                          "keyVault": {
-                            "id": "[variables('derivedIds').keyVaultId]"
-                          },
-                          "secretName": "adminUsername"
-                        }
-                    },
-                    "adminPassword": {
-                        "reference": {
-                            "keyVault": {
-                                "id": "[variables('derivedIds').keyVaultId]"
-                            },
-                            "secretName": "adminPassword"
-                        }
-                    },
-                    "StorageAccountType": {
-                        "value": "[parameters('StorageAccountType')]"
-                    },
-                    "dbVmImagePublisher": {
-                        "value": "Canonical"
-                    },
-                    "dbServerVersion": {
-                        "value": "UbuntuServer"
-                    },
-                    "dbVmImageSku": {
-                        "value": "16.04-LTS"
-                    },
-                    "dbsubnetId": {
-                        "value": "[variables('derivedIds').dbSubnet]"
-                    }
-               }
             }
         }
     ]
