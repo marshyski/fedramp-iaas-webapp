@@ -43,14 +43,6 @@
             "maxValue": 4,
             "defaultValue": 1
         },
-        "availabilitySetId": {
-            "type": "string",
-            "defaultValue": ""
-        },
-        "LoadBalancerBEId": {
-            "type": "string",
-            "defaultValue": ""
-        },
         "secrets": {
             "type": "array",
             "defaultValue": []
@@ -65,14 +57,6 @@
         "genVnetid": "[resourceId('Microsoft.Network/virtualNetworks', variables('genVnetName'))]",
         "genSubnetId": "[concat(variables('genVnetid'), '/subnets/default')]",
         "subnetId": "[if(equals(parameters('subnetId'),'null'), variables('genSubnetId'), parameters('subnetId'))]",
-        "availabilitySetId": {
-            "id": "[parameters('availabilitySetId')]"
-        },
-        "loadBalancerBEIds": [
-            {
-                "id": "[parameters('LoadBalancerBEId')]"
-            }
-        ],
         "dataDisks": [
             {
                 "diskSizeGB": "[parameters('dataDiskSize')]",
@@ -149,8 +133,7 @@
                             "privateIPAddress": "[parameters('fixedPrivateIp')]",
                             "subnet": {
                                 "id": "[variables('subnetId')]"
-                            },
-                            "loadBalancerBackendAddressPools": "[if(not(empty(parameters('LoadBalancerBEId'))),variables('loadBalancerBEIds'),json('null'))]"
+                            }
                         }
                     }
                 ]
@@ -166,7 +149,6 @@
                 "[variables('genStorageAccountId')]"
             ],
             "properties": {
-                "availabilitySet": "[if(not(empty(parameters('availabilitySetId'))), variables('availabilitySetId'), json('null'))]",
                 "hardwareProfile": {
                     "vmSize": "[parameters('vmSize')]"
                 },
