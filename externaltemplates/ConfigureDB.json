@@ -69,7 +69,8 @@
     "baseUri": "[deployment().properties.templateLink.uri]",
     "DBPrepareModuleURL": "[uri(variables('baseUri'), 'DSC/PrepareDBServer.ps1.zip')]",
     "DBPrepareFunction": "PrepareDBServer.ps1\\DBServerPrepareDsc",
-    "DBVmTemplateURL": "[uri(variables('baseUri'),'DBVM.json')]"
+    "DBVmTemplateURL": "[uri(variables('baseUri'),'DBVM.json')]",
+    "NIC": "AZ-DB-VM1-nic"
   },
   "resources": [
     {
@@ -100,7 +101,7 @@
       "apiVersion": "2017-05-10",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', variables('diagStorageAccountName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+        "[resourceId('Microsoft.Network/networkInterfaces/', variables('NIC'))]"
       ],
       "copy": {
         "name": "dbvmloop",
