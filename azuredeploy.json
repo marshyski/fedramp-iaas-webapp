@@ -1357,8 +1357,7 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2015-01-01",
             "dependsOn": [
-                "ConfigureAutomationSchedules",
-		"[concat('ConfigureVMEncryption-', variables('resourceNames').vms.web, copyindex())]"
+                "ConfigureAutomationSchedules"
             ],
             "copy": {
                 "name": "encryptionADLoop",
