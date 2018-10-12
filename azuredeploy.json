@@ -454,12 +454,6 @@
             "VMs": [
                 {
                     "Name": "[variables('resourceNames').vms.mgt]"
-                },
-                {
-                    "Name": "[variables('resourceNames').vms.db0]"
-                },
-                {
-                    "Name": "[variables('resourceNames').vms.db1]"
                 }
             ]
         },
