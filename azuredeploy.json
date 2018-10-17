@@ -245,7 +245,7 @@
           "dataRetention": 365
         },
         "vmSettings": {
-            "location": "eastus",
+            "location": "uswest2",
             "dc": {
                 "imagePublisher": "MicrosoftWindowsServer",
                 "imageOffer": "WindowsServer",
@@ -524,7 +524,7 @@
                         "value": "[variables('resourceNames').omsWorkspace]"
                     },
                     "omsWorkspaceRegion": {
-                        "value": "eastus2"
+                        "value": "uswest2"
                     },
                     "serviceTier": {
                         "value": "[variables('omsSettings').serviceTier]"

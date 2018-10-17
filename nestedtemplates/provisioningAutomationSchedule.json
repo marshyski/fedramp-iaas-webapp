@@ -21,7 +21,7 @@
             "type": "Microsoft.Automation/automationAccounts/schedules",
             "name": "[concat(parameters('omsAutomationAccountName'),'/',parameters('scheduleName'))]",
             "apiVersion": "2015-10-31",
-            "location": "eastus2",
+            "location": "uswest2",
             "dependsOn": [],
             "properties": {
                 "description": "VM Patch Automation Schedule",
