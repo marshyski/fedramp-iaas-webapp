@@ -13,7 +13,7 @@
       "name": "[concat(parameters('backupInfo').rcVaultName, '/', parameters('backupInfo').backupPolicy)]",
       "type": "Microsoft.RecoveryServices/vaults/backupPolicies",
       "dependsOn": [],
-      "location": "[resourceGroup().location]",
+      "location": "eastus2",
       "tags": {
         "Project": "Blueprint"
       },

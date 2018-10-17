@@ -245,7 +245,7 @@
           "dataRetention": 365
         },
         "vmSettings": {
-            "location": "eastus2",
+            "location": "eastus",
             "dc": {
                 "imagePublisher": "MicrosoftWindowsServer",
                 "imageOffer": "WindowsServer",
@@ -254,13 +254,16 @@
                 "ipAddressBDC": "10.200.0.6"
             },
             "web": {
-                "imagePublisher": "Canonical",
-                "imageOffer": "UbuntuServer",
-                "imageSKU": "16.04-LTS",
+                "imagePublisher": "MicrosoftWindowsServer",
+                "imageOffer": "WindowsServer",
+                "imageSKU": "2016-Datacenter",
                 "staticIPWEBStart": 5,
                 "ipAddresses": [
                     { "IpAddress": "10.200.2.5" },
-                    { "IpAddress": "10.200.2.6" }
+                    { "IpAddress": "10.200.2.6" },
+                    { "IpAddress": "10.200.2.7" },
+                    { "IpAddress": "10.200.2.8" },
+                    { "IpAddress": "10.200.2.9" }
                 ]            
             },
             "mgt": {
@@ -482,6 +485,15 @@
                     "Name": "AZ-WEB-VM1"
                 },
                 {
+                    "Name": "AZ-WEB-VM2"
+                },
+                {
+                    "Name": "AZ-WEB-VM3"
+                },
+                {
+                    "Name": "AZ-WEB-VM4"
+                },                                                                                         
+                {
                     "Name": "AZ-MGT-VM"
                 },
                 {
@@ -512,7 +524,7 @@
                         "value": "[variables('resourceNames').omsWorkspace]"
                     },
                     "omsWorkspaceRegion": {
-                        "value": "[variables('omsSettings').workspaceRegion]"
+                        "value": "eastus2"
                     },
                     "serviceTier": {
                         "value": "[variables('omsSettings').serviceTier]"

@@ -21,7 +21,7 @@
       "type": "Microsoft.RecoveryServices/vaults",
       "apiVersion": "2016-06-01",
       "name": "[parameters('backupInfo').rcVaultName]",
-      "location": "[resourceGroup().location]",
+      "location": "eastus2",
       "tags": {
         "Project": "Blueprint"
       },
