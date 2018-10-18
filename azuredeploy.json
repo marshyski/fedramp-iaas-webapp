@@ -240,12 +240,12 @@
         "staticIPWEBStart": 5,
         "RDPNAT": "RDP",
         "omsSettings": {
-          "workspaceRegion": "East US",
+          "workspaceRegion": "West US",
           "serviceTier": "PerNode",
           "dataRetention": 365
         },
         "vmSettings": {
-            "location": "uswest2",
+            "location": "westus2",
             "dc": {
                 "imagePublisher": "MicrosoftWindowsServer",
                 "imageOffer": "WindowsServer",
@@ -524,7 +524,7 @@
                         "value": "[variables('resourceNames').omsWorkspace]"
                     },
                     "omsWorkspaceRegion": {
-                        "value": "uswest2"
+                        "value": "westus2"
                     },
                     "serviceTier": {
                         "value": "[variables('omsSettings').serviceTier]"
